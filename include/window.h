@@ -1,8 +1,12 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
-struct _toolbar;
+#ifndef STDBOOL_DEFINED
+#include <stdbool.h>
+#define STDBOOL_DEFINED 1
+#endif
 
+struct _toolbar;
 struct _window{
   char * title;
   int height;
@@ -10,6 +14,7 @@ struct _window{
   SDL_Window * window;
   SDL_Renderer * renderer;
   struct _toolbar * gui;
+  bool isRunning;
 };
 
 typedef struct _window window_t;

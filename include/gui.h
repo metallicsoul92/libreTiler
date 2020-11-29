@@ -88,14 +88,14 @@ struct _toolbarItem{
     uint8_t count;
     uint8_t max;
     menuItemVariant_t * menuVariantList;
-    int (*onClick)(void * data);
+    int (*onClick)(struct _toolbarItem * data);
     bool isHighlighted;
     toolbar_t * parent;
 };
 typedef struct _toolbarItem toolbarItem_t;
 
 // toolbarItem functions
-void allocateToolbarItem(toolbarItem_t * out, const char * title,
+void allocateToolbarItem(toolbarItem_t * out, const char * title, int (*func)(toolbarItem_t * data),
                          uint8_t max, toolbar_t * parent);
 void addVariantToToolbarItem(toolbarItem_t * out , menuItemVariant_t * data);
 
@@ -111,7 +111,7 @@ struct _toolbar{
   uint8_t count;
   uint8_t max;
   toolbarItem_t * toolbarItemList;
-  int (*onClick)(void * data);
+  int (*onClick)(toolbar_t * data);
 };
 
 void allocateToolbar(toolbar_t * out, window_t * parent, uint8_t maxSize);
@@ -145,5 +145,5 @@ void font_Load();
 void closeFont();
 void renderBackground(window_t * window);
 void renderToolbar(toolbar_t * bar);
-
+void drawToolbarItemMenu(toolbar_t * bar, uint8_t index);
 #endif

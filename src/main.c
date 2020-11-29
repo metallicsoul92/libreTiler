@@ -24,7 +24,7 @@ printf("%s\n" ,name);
 if(SDL_Init(SDL_INIT_VIDEO) < 0 ){
   printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 }else{
-bool isRunning = true;
+
 
 if(TTF_Init()==-1) {
     printf("TTF_Init: %s\n", TTF_GetError());
@@ -32,16 +32,16 @@ if(TTF_Init()==-1) {
 }
 font_Load();
 setupWindowEnvironment(g_window,name,(int)NULL,(int)NULL);
-
+g_input.parent = g_window;
 renderWindow(g_window);
 SDL_RenderPresent(g_window->renderer);
 
 SDL_Event event;
-  while(isRunning){
+  while(g_window->isRunning){
     if(SDL_PollEvent(&event)){
 
       if(event.type == SDL_QUIT){
-        isRunning=false;
+        g_window->isRunning=false;
       }
 
       if(event.type == SDL_WINDOWEVENT){
@@ -59,7 +59,19 @@ SDL_Event event;
         printf("Mouse moved to X:%d , Y:%d\n",g_input.mouse_x , g_input.mouse_y);
       }
 
-
+      if(event.type == SDL_MOUSEBUTTONDOWN){
+        if(event.button.button == SDL_BUTTON_LEFT){
+          setMouseInfo(&g_input,event.button.x, event.button.y);
+          printf("Left mouse pressed at %d , %d\n",g_input.mouse_x, g_input.mouse_y);
+          determineClick(&g_input);
+          SDL_RenderPresent(g_window->renderer);
+          for(int i = 0; i < g_window->gui->count; i++){
+            printf("%s %s", g_window->gui->toolbarItemList[i].name ,
+            g_window->gui->toolbarItemList[i].isHighlighted ? "is highlighted\n" :
+            "is not highlighted\n");
+          }
+      }
+    }
 
 
   }

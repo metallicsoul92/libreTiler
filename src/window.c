@@ -5,7 +5,7 @@
 #define DEFAULT_SCREEN_WIDTH 640
 #define DEFAULT_SCREEN_HEIGHT 480
 
-//Foward Declarations 
+//Foward Declarations
 void InitializeToolbar(toolbar_t * toolbar);
 
 
@@ -47,6 +47,7 @@ out->gui = malloc(sizeof(toolbar_t));
 
 allocateToolbar(out->gui , out , 3);
 InitializeToolbar(out->gui);
+out->isRunning = true;
 }
 
 
@@ -72,6 +73,14 @@ void renderWindow(window_t * out){
   renderToolbar(out->gui);
 }
 //Callbacks
+int toolbar_onclick_callback(toolbarItem_t * data){
+  for(int i = 0; i < data->parent->count; i++){
+    if(data->parent->toolbarItemList[i].isHighlighted){
+      data->parent->toolbarItemList[i].isHighlighted = !data->parent->toolbarItemList[i].isHighlighted;
+    }
+  }
+  data->isHighlighted = !data->isHighlighted;
+}
 
 int new_callback(void * data){
   (void)data;
@@ -79,11 +88,10 @@ int new_callback(void * data){
   return -1;
 }
 
-//I wonder if this will work. We will pass in the boolean isRunning and set it
-//to false.
+
 int quit_callback(void * data){
-  bool * running = data;
-  running = false;
+  menuItemVariant_t * list = data;
+  list->parent->data.asToolbarItem->parent->parent->isRunning = false;
   return 0;
 }
 
@@ -103,21 +111,19 @@ menuParentVariant_t SettingsVar;
 void InitializeToolbar(toolbar_t * toolbar){
 
 
-  allocateToolbarItem(&File,"File",5,toolbar);
+  allocateToolbarItem(&File,"File",&toolbar_onclick_callback,5,toolbar);
   allocateParentVariant(&FileVar,TYPE_PARENT_TOOLBARITEM, &File);
-  attachToolbarItem(toolbar, &File);
-
   allocateMenuVariant(&New,TYPE_MENU_MENUITEM,"New Project",&new_callback,NULL, &FileVar);
   addVariantToToolbarItem(&File,&New);
-
-  allocateMenuVariant(&Quit,TYPE_MENU_MENUITEM,"New Project",&quit_callback,NULL, &FileVar);
+  allocateMenuVariant(&Quit,TYPE_MENU_MENUITEM,"Quit",&quit_callback,NULL, &FileVar);
   addVariantToToolbarItem(&File,&Quit);
+  attachToolbarItem(toolbar, &File);
 
-  allocateToolbarItem(&Edit,"Edit",5,toolbar);
+  allocateToolbarItem(&Edit,"Edit",&toolbar_onclick_callback,5,toolbar);
   allocateParentVariant(&EditVar,TYPE_PARENT_TOOLBARITEM, &Edit);
   attachToolbarItem(toolbar, &Edit);
 
-  allocateToolbarItem(&Settings,"Settings",5,toolbar);
+  allocateToolbarItem(&Settings,"Settings",&toolbar_onclick_callback,5,toolbar);
   allocateParentVariant(&SettingsVar,TYPE_PARENT_TOOLBARITEM, &Settings);
   attachToolbarItem(toolbar, &Settings);
 }

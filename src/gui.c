@@ -49,7 +49,7 @@ void allocateMenuVariant(menuItemVariant_t * out, enum MenuItemType t, const cha
   }
 }
 
-void allocateToolbarItem(toolbarItem_t * out, const char * title,
+void allocateToolbarItem(toolbarItem_t * out, const char * title, int (*func)(toolbarItem_t * data),
                          uint8_t max, toolbar_t * parent){
 
   out->name = malloc(sizeof(char) * strlen(title));
@@ -57,12 +57,12 @@ void allocateToolbarItem(toolbarItem_t * out, const char * title,
   out->count = 0;
   out->max = max;
   out->menuVariantList = malloc(sizeof(menuItemVariant_t) * max);
+  out->onClick = func;
   out->isHighlighted = false;
   out->parent = parent;
 }
 
 void addVariantToToolbarItem(toolbarItem_t * out , menuItemVariant_t * data){
-
   char * name;
   switch(data->type){
     case TYPE_MENU_MENUITEM:
@@ -77,7 +77,8 @@ void addVariantToToolbarItem(toolbarItem_t * out , menuItemVariant_t * data){
 
   if(out->count < out->max){
   memcpy(&out->menuVariantList[out->count],data,sizeof(menuItemVariant_t));
-  out->count++;
+  out->count +=1;
+
   }else{
   printf("Error. Cannot Attach %s to %s",name, out->name);
   }
@@ -109,7 +110,7 @@ void allocateToolbar(toolbar_t * out, window_t * parent, uint8_t maxSize){
 void attachToolbarItem(toolbar_t * out, toolbarItem_t * item){
   if(out->count <= out->max){
     memcpy(&out->toolbarItemList[out->count],item,sizeof(toolbarItem_t));
-    out->count++;
+    out->count +=1;
   }else
     printf("Cannot attach %s to toolbar", item->name);
 }
@@ -154,26 +155,96 @@ void renderToolbar(toolbar_t * bar){
   area.y = 0;
   area.w = bar->parent->width;
   area.h = 20;
+  //Draw The Toolbar
   SDL_SetRenderDrawColor(bar->parent->renderer,55,55,55,255);
   SDL_RenderFillRect(bar->parent->renderer, &area);
+  //Rects To Represent the text
   SDL_Rect toolbarItems[bar->count];
   SDL_Surface ** fontSurface = malloc(sizeof(SDL_Surface*) * bar->count);
   SDL_Texture ** fontTexture = malloc(sizeof(SDL_Texture*) * bar->count);
+
+
   SDL_Color fontColor = {255,255,255,255};
-  char fontText[8];
+  char toolbarfontText[8];
   for(int i = 0; i < bar->count; i++){
     toolbarItems[i].x = (65 * i)+ offset;
     toolbarItems[i].y = 0;
     toolbarItems[i].w = 50;
     toolbarItems[i].h = 20;
-    memset(&fontText,' ',8);
-    memcpy(&fontText ,bar->toolbarItemList[i].name,strlen(bar->toolbarItemList[i].name));
-    fontSurface[i] = TTF_RenderText_Blended(font,fontText, fontColor);
+    memset(&toolbarfontText,' ',8);
+    memcpy(&toolbarfontText ,bar->toolbarItemList[i].name,strlen(bar->toolbarItemList[i].name));
+    fontSurface[i] = TTF_RenderText_Blended(font,toolbarfontText, fontColor);
     fontTexture[i] = SDL_CreateTextureFromSurface(bar->parent->renderer, fontSurface[i]);
     SDL_RenderCopy(bar->parent->renderer, fontTexture[i], NULL, &toolbarItems[i]);
     free(fontSurface[i]);
   }
 
-    free(fontSurface);
+    for(int i = 0; i < bar->count; i++){
 
+      if(bar->toolbarItemList[i].isHighlighted){
+        printf("Drawing %s Menu\n", bar->toolbarItemList[i].name);
+        drawToolbarItemMenu(bar,i);
+}
+
+
+  }
+}
+
+void drawToolbarItemMenu(toolbar_t * bar, uint8_t index){
+  int itemlistcount = bar->toolbarItemList[index].count;
+  SDL_Rect highlightedTBItem;
+  char ToolBarItemMenuText[24];
+  SDL_Surface **  tbmfontSurface;
+  SDL_Texture **  tbmfontTexture;
+  uint8_t offset = 4;
+  SDL_Color fontColor = {255,255,255,255};
+  highlightedTBItem.x = (65 * index)+ offset;
+  highlightedTBItem.y = 20;
+  highlightedTBItem.w = 150;
+  highlightedTBItem.h = 20 * itemlistcount;
+  printf("highlightedTBItem =\n.x=%d .y=%d .w=%d .h=%d",highlightedTBItem.x ,highlightedTBItem.y,
+            highlightedTBItem.w, highlightedTBItem.h );
+  tbmfontSurface = malloc(sizeof(SDL_Surface*) * itemlistcount);
+  tbmfontTexture = malloc(sizeof(SDL_Texture*) * itemlistcount);
+  if(  SDL_SetRenderDrawColor(bar->parent->renderer,55,55,55,255) !=0){
+    printf("There is an error with SDL_SetRenderDrawColor \n");
+    printf("%s\n",SDL_GetError());
+  }
+  if(SDL_RenderFillRect(bar->parent->renderer, &highlightedTBItem) !=0){
+    printf("There is an error with SDL_RenderFillRect \n");
+    printf("%s\n",SDL_GetError());
+  }
+  SDL_Rect menuItems[itemlistcount];
+  for(int j = 0; j < itemlistcount; j++){
+    memset(&ToolBarItemMenuText,' ',24);
+    switch(bar->toolbarItemList[index].menuVariantList[j].type){
+      case TYPE_MENU_MENUITEM:
+        memcpy(&ToolBarItemMenuText,
+        bar->toolbarItemList[index].menuVariantList[j].data.asItem->title,
+        strlen( bar->toolbarItemList[index].menuVariantList[j].data.asItem->title)
+        );
+        break;
+      case TYPE_MENU_MENUGROUP:
+        memcpy(&ToolBarItemMenuText,
+        bar->toolbarItemList[index].menuVariantList[j].data.asGroup->title,
+        strlen(bar->toolbarItemList[index].menuVariantList[j].data.asGroup->title)
+        );
+        break;
+      }
+  menuItems[j].x = highlightedTBItem.x;
+  menuItems[j].y = 20 + (20 * j);
+  menuItems[j].w = highlightedTBItem.w;
+  menuItems[j].h = 20;
+
+  tbmfontSurface[j] = TTF_RenderText_Blended(font,ToolBarItemMenuText, fontColor);
+  if(tbmfontSurface[j] == NULL){
+    printf("TTF Error? Render Text Blended in the drawing of the menu items.\n");
+  }
+  tbmfontTexture[j] = SDL_CreateTextureFromSurface(bar->parent->renderer, tbmfontSurface[j]);
+  if(tbmfontTexture[j] == NULL){
+    printf("SDL Error? CreateTextureFromSurface in the drawing of the menu items.\n");
+  }
+  SDL_RenderCopy(bar->parent->renderer, tbmfontTexture[j], NULL, &menuItems[j]);
+  free(tbmfontSurface[j]);
+  }
 }
