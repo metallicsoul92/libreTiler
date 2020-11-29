@@ -18,4 +18,7 @@ typedef struct _window window_t;
 void setupWindowEnvironment(window_t * out, const char * name, int height, int width);
 void deleteWindow(window_t * out);
 void resizeWindow(window_t * out, int x, int y);
+void renderWindow(window_t * out);
+
+
 #endif

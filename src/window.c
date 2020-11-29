@@ -1,9 +1,13 @@
 #include "../include/graphics_common.h"
 #include "../include/window.h"
-
+#include "../include/gui.h"
 
 #define DEFAULT_SCREEN_WIDTH 640
 #define DEFAULT_SCREEN_HEIGHT 480
+
+//Foward Declarations 
+void InitializeToolbar(toolbar_t * toolbar);
+
 
 
 //Remember, this implies the window_t is malloced or already in memory
@@ -37,8 +41,12 @@ if(out->window == NULL){
 
 //create renderer NOTE: SDL_RENDERER_ACCELERATED fails currently. i need drivers i guess
 out->renderer = SDL_CreateRenderer(out->window,-1, 0 );
-//create UI??
 
+//create GUI??
+out->gui = malloc(sizeof(toolbar_t));
+
+allocateToolbar(out->gui , out , 3);
+InitializeToolbar(out->gui);
 }
 
 
@@ -47,7 +55,8 @@ void resizeWindow(window_t * out, int x, int y){
   out->height = y;
   SDL_SetWindowSize(out->window,out->width, out->height);
   SDL_RenderClear(out->renderer);
-  SDL_RenderPresent(out->renderer);
+  renderBackground(out);
+  renderToolbar(out->gui);
 }
 
 
@@ -56,4 +65,59 @@ void deleteWindow(window_t * out){
   SDL_DestroyRenderer(out->renderer);
   SDL_DestroyWindow(out->window);
   free(out);
+}
+
+void renderWindow(window_t * out){
+  renderBackground(out);
+  renderToolbar(out->gui);
+}
+//Callbacks
+
+int new_callback(void * data){
+  (void)data;
+  //implement this
+  return -1;
+}
+
+//I wonder if this will work. We will pass in the boolean isRunning and set it
+//to false.
+int quit_callback(void * data){
+  bool * running = data;
+  running = false;
+  return 0;
+}
+
+
+// TOOLBAR ITEMS
+toolbarItem_t File;
+toolbarItem_t Edit;
+toolbarItem_t Settings;
+
+menuItemVariant_t New;
+menuItemVariant_t Quit;
+
+menuParentVariant_t FileVar;
+menuParentVariant_t EditVar;
+menuParentVariant_t SettingsVar;
+
+void InitializeToolbar(toolbar_t * toolbar){
+
+
+  allocateToolbarItem(&File,"File",5,toolbar);
+  allocateParentVariant(&FileVar,TYPE_PARENT_TOOLBARITEM, &File);
+  attachToolbarItem(toolbar, &File);
+
+  allocateMenuVariant(&New,TYPE_MENU_MENUITEM,"New Project",&new_callback,NULL, &FileVar);
+  addVariantToToolbarItem(&File,&New);
+
+  allocateMenuVariant(&Quit,TYPE_MENU_MENUITEM,"New Project",&quit_callback,NULL, &FileVar);
+  addVariantToToolbarItem(&File,&Quit);
+
+  allocateToolbarItem(&Edit,"Edit",5,toolbar);
+  allocateParentVariant(&EditVar,TYPE_PARENT_TOOLBARITEM, &Edit);
+  attachToolbarItem(toolbar, &Edit);
+
+  allocateToolbarItem(&Settings,"Settings",5,toolbar);
+  allocateParentVariant(&SettingsVar,TYPE_PARENT_TOOLBARITEM, &Settings);
+  attachToolbarItem(toolbar, &Settings);
 }

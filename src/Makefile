@@ -1,6 +1,6 @@
 PROJ_NAME=libreTiler
 INCLUDE_FOLDER=../include
-LINKER_FLAGS=-lSDL2
+LINKER_FLAGS=-lSDL2 -lSDL2_ttf
 BIN_DIR=../bin
 SRC_DIR=
 CC=gcc

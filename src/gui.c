@@ -1,14 +1,12 @@
 #include "../include/gui.h"
 #include "../include/graphics_common.h"
-
+#include "../include/window.h"
 
 void allocateMenuItem(menuItem_t * out, const char * title,int (*func)(void * data)){
       out->title = malloc(sizeof(char) * strlen(title));
       strcpy(out->title, title);
       out->onClick = func;
 }
-
-
 
 void allocateMenuGroup(menuItemGroup_t * out , const char * title,
                        uint8_t initialsize){
@@ -97,4 +95,85 @@ void allocateParentVariant(menuParentVariant_t * out, enum MenuParentType t, voi
     default:
     break;
   }
+}
+
+
+void allocateToolbar(toolbar_t * out, window_t * parent, uint8_t maxSize){
+  out->parent = parent;
+  out->count = 0;
+  out->max = maxSize;
+  out->toolbarItemList = malloc(sizeof(toolbarItem_t) * maxSize);
+  out->onClick = NULL;
+}
+
+void attachToolbarItem(toolbar_t * out, toolbarItem_t * item){
+  if(out->count <= out->max){
+    memcpy(&out->toolbarItemList[out->count],item,sizeof(toolbarItem_t));
+    out->count++;
+  }else
+    printf("Cannot attach %s to toolbar", item->name);
+}
+
+/**
+    GUI SECTION
+**/
+
+TTF_Font * font;
+void font_Load(){
+    font=TTF_OpenFont("OpenSans-Regular.ttf", 32);
+    if(!font) {
+    printf("TTF_OpenFont: %s\n", TTF_GetError());
+    // handle error
+    exit(-2);
+}
+}
+
+void closeFont(){
+  TTF_CloseFont(font);
+}
+
+void renderBackground(window_t * window){
+  //Sets the color of the renderer
+  if(SDL_SetRenderDrawColor(window->renderer,0,0,255,255) != 0){
+    printf("There is an error with SDL_SetRenderDrawColor! \n");
+    printf("%s\n",SDL_GetError());
+  }
+
+  //Draws the background to the renderer
+  if(SDL_RenderClear(window->renderer) !=0){
+    printf("There is an error with SDL_RenderClear \n");
+    printf("%s\n",SDL_GetError());
+  }
+}
+
+
+void renderToolbar(toolbar_t * bar){
+  uint8_t offset = 4;
+  SDL_Rect area;
+  area.x = 0;
+  area.y = 0;
+  area.w = bar->parent->width;
+  area.h = 20;
+  SDL_SetRenderDrawColor(bar->parent->renderer,55,55,55,255);
+  SDL_RenderFillRect(bar->parent->renderer, &area);
+  SDL_Rect toolbarItems[bar->count];
+  SDL_Surface ** fontSurface = malloc(sizeof(SDL_Surface*) * bar->count);
+  SDL_Texture ** fontTexture = malloc(sizeof(SDL_Texture*) * bar->count);
+  SDL_Color fontColor = {255,255,255,255};
+  char fontText[8];
+  for(int i = 0; i < bar->count; i++){
+    toolbarItems[i].x = (65 * i)+ offset;
+    toolbarItems[i].y = 0;
+    toolbarItems[i].w = 50;
+    toolbarItems[i].h = 20;
+    memset(&fontText,' ',8);
+    memcpy(&fontText ,bar->toolbarItemList[i].name,strlen(bar->toolbarItemList[i].name));
+    fontSurface[i] = TTF_RenderText_Blended(font,fontText, fontColor);
+    fontTexture[i] = SDL_CreateTextureFromSurface(bar->parent->renderer, fontSurface[i]);
+    SDL_RenderCopy(bar->parent->renderer, fontTexture[i], NULL, &toolbarItems[i]);
+    free(fontSurface[i]);
+  }
+
+    free(fontSurface);
+
 }
