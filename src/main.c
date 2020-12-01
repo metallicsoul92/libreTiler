@@ -47,8 +47,9 @@ SDL_Event event;
       if(event.type == SDL_WINDOWEVENT){
         if(event.window.event == SDL_WINDOWEVENT_RESIZED){
           printf("Window resized to : %dx %dy\n",event.window.data1, event.window.data2);
-          resizeWindow(g_window,event.window.data1, event.window.data2);
-          renderToolbar(g_window->gui);
+          uint16_t oldw = g_window->width;
+          uint16_t oldh = g_window->height;
+          resizeWindow(g_window,oldw, oldh, event.window.data1, event.window.data2);
           SDL_RenderPresent(g_window->renderer);
         }
       }

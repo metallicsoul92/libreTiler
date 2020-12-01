@@ -7,7 +7,7 @@
 
 //Foward Declarations
 void InitializeToolbar(toolbar_t * toolbar);
-
+void InitializeFrames(window_t * out);
 
 
 //Remember, this implies the window_t is malloced or already in memory
@@ -37,8 +37,6 @@ out->window = SDL_CreateWindow(out->title,SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS
 if(out->window == NULL){
               printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
 }
-
-
 //create renderer NOTE: SDL_RENDERER_ACCELERATED fails currently. i need drivers i guess
 out->renderer = SDL_CreateRenderer(out->window,-1, 0 );
 
@@ -48,16 +46,26 @@ out->gui = malloc(sizeof(toolbar_t));
 allocateToolbar(out->gui , out , 3);
 InitializeToolbar(out->gui);
 out->isRunning = true;
+out->frameMax = 8;
+out->frameCount = 0;
+out->frames = malloc(sizeof(frame_t) * out->frameMax);
+InitializeFrames(out);
 }
 
 
-void resizeWindow(window_t * out, int x, int y){
+void resizeWindow(window_t * out, int ox, int oy, int x, int y){
   out->width = x;
   out->height = y;
+  int dx = x - ox;
+  int dy = y - oy;
+
   SDL_SetWindowSize(out->window,out->width, out->height);
   SDL_RenderClear(out->renderer);
-  renderBackground(out);
-  renderToolbar(out->gui);
+  for(uint8_t i = 0; i < out->frameCount;i++){
+    out->frames[i].onResize(&out->frames[i],out->frames[i].width+dx,
+                            out->frames[i].height+dy);
+  }
+  renderWindow(out);
 }
 
 
@@ -70,7 +78,9 @@ void deleteWindow(window_t * out){
 
 void renderWindow(window_t * out){
   renderBackground(out);
+  renderFrame(&out->frames[0]);
   renderToolbar(out->gui);
+
 }
 //Callbacks
 int toolbar_onclick_callback(toolbarItem_t * data){
@@ -108,6 +118,11 @@ menuParentVariant_t FileVar;
 menuParentVariant_t EditVar;
 menuParentVariant_t SettingsVar;
 
+//frames
+frame_t MapView;
+frame_t ToolView;
+
+
 void InitializeToolbar(toolbar_t * toolbar){
 
 
@@ -126,4 +141,18 @@ void InitializeToolbar(toolbar_t * toolbar){
   allocateToolbarItem(&Settings,"Settings",&toolbar_onclick_callback,5,toolbar);
   allocateParentVariant(&SettingsVar,TYPE_PARENT_TOOLBARITEM, &Settings);
   attachToolbarItem(toolbar, &Settings);
+}
+
+void InitializeFrames(window_t * out){
+  int mapFrameWidth = (out->width/2) + 100;
+  int mapFrameHeight = out->height - 20;
+  color_t black;
+  black.r = 0; black.g = 0 ; black.b = 0 ; black.a  = 0;
+  color_t lightBlue;
+  lightBlue.r = 50; lightBlue.g = 50; lightBlue.b = 255; lightBlue.a = 50;
+
+  allocateFrame(&MapView, out, 0, 20, mapFrameWidth,mapFrameHeight);
+  setBorder(&MapView,black);
+  setBackground(&MapView,lightBlue);
+  attachFrame(out,&MapView);
 }

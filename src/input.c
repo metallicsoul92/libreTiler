@@ -31,8 +31,7 @@ void determineClick(input_t * out){
       out->parent->gui->toolbarItemList[i].onClick(&out->parent->gui->toolbarItemList[i]);
       printf("Mouse Pressed on %s\n",
       out->parent->gui->toolbarItemList[i].name);
-      renderBackground(out->parent);
-      renderToolbar(out->parent->gui);
+      renderWindow(out->parent);
     }
   }
   for(int i = 0; i <tbcount; i++){

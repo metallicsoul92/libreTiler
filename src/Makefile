@@ -7,11 +7,10 @@ CC=gcc
 CFLAGS=-g
 
 
-all: ${BIN_DIR}/gui.o ${BIN_DIR}/input.o ${BIN_DIR}/window.o ${BIN_DIR}/main.o
-	${CC} ${CFLAGS} ${BIN_DIR}/gui.o ${BIN_DIR}/input.o ${BIN_DIR}/window.o ${BIN_DIR}/main.o ${LINKER_FLAGS} -o ${BIN_DIR}/${PROJ_NAME}
+all: ${BIN_DIR}/input.o ${BIN_DIR}/window.o ${BIN_DIR}/main.o
+	cd gui && make all
+	${CC} ${CFLAGS} ${BIN_DIR}/gui/*.o ${BIN_DIR}/input.o ${BIN_DIR}/window.o ${BIN_DIR}/main.o ${LINKER_FLAGS} -o ${BIN_DIR}/${PROJ_NAME}
 
-${BIN_DIR}/gui.o: gui.c
-	${CC} ${CFLAGS} -I${INCLUDE_FOLDER} -c $< -o $@
 
 ${BIN_DIR}/window.o: window.c
 	${CC} ${CFLAGS} -I${INCLUDE_FOLDER} -c $< -o $@
@@ -27,3 +26,4 @@ ${BIN_DIR}/main.o: main.c
 clean:
 	rm ${BIN_DIR}/*.o
 	rm ${BIN_DIR}/${PROJ_NAME}
+	cd gui && make clean

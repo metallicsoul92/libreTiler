@@ -1,6 +1,6 @@
-#include "../include/gui.h"
-#include "../include/graphics_common.h"
-#include "../include/window.h"
+#include "../../include/gui.h"
+//#include "../../include/graphics_common.h"
+#include "../../include/window.h"
 
 void allocateMenuItem(menuItem_t * out, const char * title,int (*func)(void * data)){
       out->title = malloc(sizeof(char) * strlen(title));
@@ -118,6 +118,7 @@ void attachToolbarItem(toolbar_t * out, toolbarItem_t * item){
 /**
     GUI SECTION
 **/
+
 
 TTF_Font * font;
 void font_Load(){
